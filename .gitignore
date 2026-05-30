@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+
+# Device-specific/generated root artifacts
+root_work/
+*.img
+
+# Downloaded third-party APKs are kept local.
+*.apk
+
+# macOS metadata
+.DS_Store
