@@ -191,6 +191,40 @@ def ensure_sukisu_installed():
         print("SukiSU APK 已安装，但未能自动确认包名。请在手机桌面确认是否出现 SukiSU。")
 
 
+def strict_root_status():
+    installed = find_installed_sukisu_package()
+    su_version = quiet(["adb", "shell", "su", "-v"])
+    su_id = quiet(["adb", "shell", "su", "-c", "id"])
+    su_version_text = su_version.stdout.strip()
+    su_id_output = (su_id.stdout + su_id.stderr).strip()
+
+    is_rooted = (
+        bool(installed)
+        and su_version.returncode == 0
+        and bool(su_version_text)
+        and su_id.returncode == 0
+        and "uid=0" in su_id_output
+    )
+
+    return {
+        "rooted": is_rooted,
+        "manager_package": installed,
+        "su_version": su_version_text,
+        "su_id": su_id_output,
+    }
+
+
+def print_root_status(status):
+    print("Root 状态检测:")
+    print(f"  SukiSU 包名: {status.get('manager_package') or '未检测到'}")
+    print(f"  su 版本: {status.get('su_version') or '未检测到'}")
+    print(f"  su -c id: {status.get('su_id') or '未通过'}")
+    if status.get("rooted"):
+        print("  结论: 已确认 root，可跳过刷写。")
+    else:
+        print("  结论: 未能严格确认 root，继续执行 root 流程。")
+
+
 def find_init_boot_in_dir(root):
     root = Path(root)
     matches = [p for p in root.rglob("init_boot.img") if p.is_file()]
@@ -425,22 +459,16 @@ def verify_after_flash(expected_slot):
     if expected_slot and slot and slot != expected_slot:
         print(f"  警告: 当前槽位是 {slot}，刷入前记录的是 {expected_slot}。")
 
-    su_version = quiet(["adb", "shell", "su", "-v"])
-    if su_version.returncode == 0 and su_version.stdout.strip():
-        print(f"  su 版本: {su_version.stdout.strip()}")
-    else:
-        print("  暂未从 adb shell 直接读取到 su 版本。")
-
-    su_id = quiet(["adb", "shell", "su", "-c", "id"])
-    output = (su_id.stdout + su_id.stderr).strip()
-    if su_id.returncode == 0 and "uid=0" in output:
-        print(f"  root 验证: 成功 ({output})")
+    status = strict_root_status()
+    print(f"  SukiSU 包名: {status.get('manager_package') or '未检测到'}")
+    print(f"  su 版本: {status.get('su_version') or '未检测到'}")
+    print(f"  su -c id: {status.get('su_id') or '未通过'}")
+    if status.get("rooted"):
+        print("  root 验证: 成功")
         return True
 
     print("  root 验证: 还未确认成功。")
     print("  请打开 SukiSU，确认 root 管理器状态，并给 shell/ADB 授权后再测试。")
-    if output:
-        print(f"  su 输出: {output}")
     return False
 
 
@@ -525,6 +553,11 @@ def one_key_root():
 
     state = check_phone(require_unlocked=True)
     ensure_sukisu_installed()
+    root_status = strict_root_status()
+    print_root_status(root_status)
+    if root_status.get("rooted"):
+        return
+
     out_dir = Path("root_work").resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
 

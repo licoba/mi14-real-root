@@ -55,19 +55,20 @@ python3 xiaomi14_onekey_root.py
 1. 检查 `adb`、`fastboot`。
 2. 读取手机机型、设备代号、当前槽位、系统版本和 BL 状态。
 3. 检查或安装 SukiSU v4.1.2。
-4. 显示 ROM 下载确认信息。
-5. 要求你手动输入完整线刷包路径、解压目录路径，或 `init_boot.img` 路径。
-6. 只提取 `init_boot.img`，不会完整解压整个 ROM。
-7. 推送原始镜像到手机：
+4. 严格检测当前是否已经 Root：只有 SukiSU 已安装、`su -v` 可用、`su -c id` 返回 `uid=0` 时才会判定已 Root 并跳过刷写。
+5. 显示 ROM 下载确认信息。
+6. 要求你手动输入完整线刷包路径、解压目录路径，或 `init_boot.img` 路径。
+7. 只提取 `init_boot.img`，不会完整解压整个 ROM。
+8. 推送原始镜像到手机：
 
 ```text
 /sdcard/Download/init_boot_stock.img
 ```
 
-8. 提示你在手机 SukiSU 中修补这个镜像。
-9. 自动拉回 `kernelsu_patched*.img`。
-10. 最后确认输入 `ROOT` 后，刷入当前槽位的 `init_boot`。
-11. 手机重启后等待 adb 返回，并做基础 root 状态验证。
+9. 提示你在手机 SukiSU 中修补这个镜像。
+10. 自动拉回 `kernelsu_patched*.img`。
+11. 最后确认输入 `ROOT` 后，刷入当前槽位的 `init_boot`。
+12. 手机重启后等待 adb 返回，并做基础 root 状态验证。
 
 ## 单独检测 BL 状态
 
